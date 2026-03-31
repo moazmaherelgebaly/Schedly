@@ -133,6 +133,9 @@ class ScheduleGeneratorTest {
     @Test
     fun `test performance - worst case 1024 candidates`() {
         // Create 5 courses with 4 lecture groups and 4 section groups each
+        val dayCount = DayOfWeek.values().size
+        val periodCount = 6
+
         val courses = (1..5).map { courseNum ->
             val courseId = UUID.randomUUID()
             val lectures = (1..4).map { groupNum ->
@@ -140,8 +143,8 @@ class ScheduleGeneratorTest {
                     courseId = courseId,
                     type = SessionType.LECTURE,
                     group = "G$groupNum",
-                    day = DayOfWeek.values()[(courseNum + groupNum) % 6],
-                    period = ((courseNum * groupNum) % 6) + 1
+                    day = DayOfWeek.values()[(courseNum + groupNum) % dayCount],
+                    period = ((courseNum * groupNum) % periodCount) + 1
                 )
             }
             val sections = (1..4).map { groupNum ->
@@ -149,8 +152,8 @@ class ScheduleGeneratorTest {
                     courseId = courseId,
                     type = SessionType.SECTION,
                     group = "G$groupNum",
-                    day = DayOfWeek.values()[(courseNum + groupNum + 1) % 6],
-                    period = ((courseNum * groupNum + 2) % 6) + 1
+                    day = DayOfWeek.values()[(courseNum + groupNum + 1) % dayCount],
+                    period = ((courseNum * groupNum + 2) % periodCount) + 1
                 )
             }
             createCourse(id = courseId, name = "Course $courseNum", lectures = lectures, sections = sections)

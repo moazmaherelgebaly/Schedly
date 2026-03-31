@@ -15,6 +15,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.assertThrows
 import org.junit.Before
 import org.junit.Test
 import java.time.Instant
@@ -174,9 +175,12 @@ class SessionDaoTest {
         sessionDao.insert(session1)
 
         val session2 = createTestSession("session-2", "test-course", "SATURDAY", 1, "A-101")
-        val rowId = sessionDao.insert(session2)
-
-        assertEquals(-1L, rowId) { "Insert should return -1 for room conflict" }
+        try {
+            sessionDao.insert(session2)
+            throw AssertionError("Insert should throw SQLiteConstraintException for room conflict")
+        } catch (e: android.database.sqlite.SQLiteConstraintException) {
+            // Expected
+        }
     }
 
     @Test

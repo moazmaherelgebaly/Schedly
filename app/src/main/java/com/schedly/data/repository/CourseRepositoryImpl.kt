@@ -1,5 +1,6 @@
 package com.schedly.data.repository
 
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.withTransaction
 import com.schedly.data.db.AppDatabase
 import com.schedly.data.db.dao.CourseDao
@@ -11,6 +12,7 @@ import com.schedly.domain.error.RoomConflictException
 import com.schedly.domain.error.ValidationError
 import com.schedly.domain.model.Course
 import com.schedly.domain.model.Session
+import com.schedly.domain.model.SessionType
 import com.schedly.domain.repository.ICourseRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -40,8 +42,8 @@ class CourseRepositoryImpl(
                 return@withContext Result.failure(ValidationError.MissingSessions("Course must have at least one session"))
             }
 
-            val hasLecture = sessions.any { it.type == com.schedly.domain.model.SessionType.LECTURE }
-            val hasSection = sessions.any { it.type == com.schedly.domain.model.SessionType.SECTION }
+            val hasLecture = sessions.any { it.type == SessionType.LECTURE }
+            val hasSection = sessions.any { it.type == SessionType.SECTION }
             if (!hasLecture || !hasSection) {
                 return@withContext Result.failure(ValidationError.MissingSessions("Course must have at least one lecture and one section"))
             }
@@ -52,29 +54,29 @@ class CourseRepositoryImpl(
                 }
             }
 
-            sessions.forEach { session ->
-                if (sessionDao.isRoomOccupied(session.day.name, session.period, session.room, null)) {
-                    return@withContext Result.failure(RoomConflictException(session.day, session.period, session.room))
-                }
-            }
-
             database.withTransaction {
-                val courseEntity = CourseEntity.fromDomain(course)
-                val rowId = courseDao.insert(courseEntity)
-                if (rowId == -1L) {
-                    throw ValidationError.InvalidCourseName("Failed to insert course")
-                }
-
-                sessions.forEach { session ->
-                    val sessionEntity = SessionEntity.fromDomain(session.copy(courseId = course.id))
-                    val sessionRowId = sessionDao.insert(sessionEntity)
-                    if (sessionRowId == -1L) {
-                        throw RoomConflictException(session.day, session.period, session.room)
+                try {
+                    val courseEntity = CourseEntity.fromDomain(course)
+                    val rowId = courseDao.insert(courseEntity)
+                    if (rowId == -1L) {
+                        throw ValidationError.InvalidCourseName("Failed to insert course")
                     }
+
+                    sessions.forEach { session ->
+                        val sessionEntity = SessionEntity.fromDomain(session.copy(courseId = course.id))
+                        val sessionRowId = sessionDao.insert(sessionEntity)
+                        if (sessionRowId == -1L) {
+                            throw RoomConflictException(session.day, session.period, session.room)
+                        }
+                    }
+                } catch (e: SQLiteConstraintException) {
+                    throw RoomConflictException(null, null, null, "Room conflict detected during insert")
                 }
             }
 
             Result.success(course.id)
+        } catch (e: RoomConflictException) {
+            Result.failure(e)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -93,8 +95,8 @@ class CourseRepositoryImpl(
                 return@withContext Result.failure(ValidationError.MissingSessions("Course must have at least one session"))
             }
 
-            val hasLecture = sessions.any { it.type == com.schedly.domain.model.SessionType.LECTURE }
-            val hasSection = sessions.any { it.type == com.schedly.domain.model.SessionType.SECTION }
+            val hasLecture = sessions.any { it.type == SessionType.LECTURE }
+            val hasSection = sessions.any { it.type == SessionType.SECTION }
             if (!hasLecture || !hasSection) {
                 return@withContext Result.failure(ValidationError.MissingSessions("Course must have at least one lecture and one section"))
             }
@@ -105,28 +107,28 @@ class CourseRepositoryImpl(
                 }
             }
 
-            sessions.forEach { session ->
-                if (sessionDao.isRoomOccupied(session.day.name, session.period, session.room, session.id.toString())) {
-                    return@withContext Result.failure(RoomConflictException(session.day, session.period, session.room))
-                }
-            }
-
             database.withTransaction {
-                val courseEntity = CourseEntity.fromDomain(course)
-                courseDao.update(courseEntity)
+                try {
+                    val courseEntity = CourseEntity.fromDomain(course)
+                    courseDao.update(courseEntity)
 
-                sessionDao.deleteSessionsForCourse(course.id.toString())
+                    sessionDao.deleteSessionsForCourse(course.id.toString())
 
-                sessions.forEach { session ->
-                    val sessionEntity = SessionEntity.fromDomain(session.copy(courseId = course.id))
-                    val sessionRowId = sessionDao.insert(sessionEntity)
-                    if (sessionRowId == -1L) {
-                        throw RoomConflictException(session.day, session.period, session.room)
+                    sessions.forEach { session ->
+                        val sessionEntity = SessionEntity.fromDomain(session.copy(courseId = course.id))
+                        val sessionRowId = sessionDao.insert(sessionEntity)
+                        if (sessionRowId == -1L) {
+                            throw RoomConflictException(session.day, session.period, session.room)
+                        }
                     }
+                } catch (e: SQLiteConstraintException) {
+                    throw RoomConflictException(null, null, null, "Room conflict detected during update")
                 }
             }
 
             Result.success(Unit)
+        } catch (e: RoomConflictException) {
+            Result.failure(e)
         } catch (e: Exception) {
             Result.failure(e)
         }
