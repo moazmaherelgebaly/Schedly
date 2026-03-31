@@ -8,9 +8,10 @@ import org.junit.Assert.assertTrue
 import java.util.UUID
 
 class DiagnosticsEngineTest {
-    
+
     private val diagnosticsEngine = DiagnosticsEngine()
-    
+    private val scheduleGenerator = ScheduleGenerator()
+
     private fun createCourse(
         id: UUID = UUID.randomUUID(),
         name: String = "Test Course",
@@ -43,9 +44,9 @@ class DiagnosticsEngineTest {
     fun `test diagnose zero baseline`() {
         val courses = emptyList<Course>()
         val constraints = Constraints()
-        
-        val diagnostic = diagnosticsEngine.diagnose(courses, constraints, baselineCount = 0)
-        
+
+        val diagnostic = diagnosticsEngine.diagnose(courses, constraints, baselineCount = 0, generator = scheduleGenerator)
+
         assertEquals("Input Data", diagnostic.mostRestrictiveConstraint)
         assertEquals(0, diagnostic.baselineCount)
         assertTrue(diagnostic.hint.isNotEmpty())
@@ -63,7 +64,7 @@ class DiagnosticsEngineTest {
                 createSession(courseId, SessionType.SECTION, "G1", DayOfWeek.SATURDAY, 2)
             )
         )
-        
+
         // Exclude all day-periods where sessions exist
         val constraints = Constraints(
             excludedDayPeriods = listOf(
@@ -71,13 +72,14 @@ class DiagnosticsEngineTest {
                 DayPeriod(DayOfWeek.SATURDAY, 2)
             )
         )
-        
+
         val diagnostic = diagnosticsEngine.diagnose(
             courses = listOf(course),
             constraints = constraints,
-            baselineCount = 1
+            baselineCount = 1,
+            generator = scheduleGenerator
         )
-        
+
         assertNotNull(diagnostic)
         assertTrue(diagnostic.constraintImpacts.isNotEmpty())
         assertTrue(diagnostic.hint.contains("eliminating all candidates"))
@@ -97,19 +99,20 @@ class DiagnosticsEngineTest {
                 createSession(courseId, SessionType.SECTION, "G2", DayOfWeek.SUNDAY, 2)
             )
         )
-        
+
         // Multiple constraints, one should be most restrictive
         val constraints = Constraints(
             weekLoadMax = 1, // Very restrictive - only 1 day allowed
             excludedDayPeriods = listOf(DayPeriod(DayOfWeek.MONDAY, 1)) // Less restrictive
         )
-        
+
         val diagnostic = diagnosticsEngine.diagnose(
             courses = listOf(course),
             constraints = constraints,
-            baselineCount = 4
+            baselineCount = 4,
+            generator = scheduleGenerator
         )
-        
+
         assertNotNull(diagnostic)
         // Week Load should be identified as most restrictive
         assertTrue(diagnostic.constraintImpacts.containsKey("Week Load"))
@@ -127,20 +130,21 @@ class DiagnosticsEngineTest {
                 createSession(courseId, SessionType.SECTION, "G1", DayOfWeek.SATURDAY, 2)
             )
         )
-        
+
         val constraints = Constraints(
             excludedDayPeriods = listOf(
                 DayPeriod(DayOfWeek.SATURDAY, 1),
                 DayPeriod(DayOfWeek.SATURDAY, 2)
             )
         )
-        
+
         val diagnostic = diagnosticsEngine.diagnose(
             courses = listOf(course),
             constraints = constraints,
-            baselineCount = 1
+            baselineCount = 1,
+            generator = scheduleGenerator
         )
-        
+
         assertTrue(diagnostic.hint.startsWith("No schedules found"))
         assertTrue(diagnostic.hint.contains("try relaxing"))
     }
@@ -157,19 +161,20 @@ class DiagnosticsEngineTest {
                 createSession(courseId, SessionType.SECTION, "G1", DayOfWeek.SUNDAY, 1)
             )
         )
-        
+
         val constraints = Constraints(
             weekLoadMax = 1,
             dayLoadMax = 1,
             allowGaps = false
         )
-        
+
         val diagnostic = diagnosticsEngine.diagnose(
             courses = listOf(course),
             constraints = constraints,
-            baselineCount = 1
+            baselineCount = 1,
+            generator = scheduleGenerator
         )
-        
+
         // Should have impact for each active constraint
         assertTrue(diagnostic.constraintImpacts.isNotEmpty())
     }

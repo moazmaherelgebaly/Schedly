@@ -105,30 +105,35 @@ class PriorityDropLogicTest {
     fun `test partial schedule marked correctly`() {
         val course1Id = UUID.randomUUID()
         val course2Id = UUID.randomUUID()
-        
-        // Create a scenario where dropping LOW-priority session resolves conflict
-        val sessions = listOf(
-            // Course 1 - no conflict
+        val course3Id = UUID.randomUUID()
+
+        // Course 1 - no conflict
+        val course1Sessions = listOf(
             createSession(course1Id, SessionType.LECTURE, "G1", DayOfWeek.SATURDAY, 1, PriorityLevel.MEDIUM),
-            createSession(course1Id, SessionType.SECTION, "G1", DayOfWeek.SATURDAY, 2, PriorityLevel.MEDIUM),
-            // Course 2 - LOW-priority lecture conflicts with another session
+            createSession(course1Id, SessionType.SECTION, "G1", DayOfWeek.SATURDAY, 2, PriorityLevel.MEDIUM)
+        )
+
+        // Course 2 - has multiple lectures, one is LOW priority and conflicts
+        val course2Sessions = listOf(
             createSession(course2Id, SessionType.LECTURE, "G1", DayOfWeek.SUNDAY, 1, PriorityLevel.LOW),
+            createSession(course2Id, SessionType.LECTURE, "G2", DayOfWeek.MONDAY, 1, PriorityLevel.MEDIUM),
             createSession(course2Id, SessionType.SECTION, "G1", DayOfWeek.SUNDAY, 2, PriorityLevel.MEDIUM)
         )
-        val schedule = createSchedule(sessions)
-        
-        // Add a conflicting session from another course (simulating real scenario)
-        val course3Id = UUID.randomUUID()
-        val conflictingSessions = sessions + listOf(
-            createSession(course3Id, SessionType.LECTURE, "G1", DayOfWeek.SUNDAY, 1, PriorityLevel.HIGH)
+
+        // Course 3 - HIGH priority session that conflicts with Course 2's LOW priority lecture
+        val course3Sessions = listOf(
+            createSession(course3Id, SessionType.LECTURE, "G1", DayOfWeek.SUNDAY, 1, PriorityLevel.HIGH),
+            createSession(course3Id, SessionType.SECTION, "G1", DayOfWeek.SUNDAY, 3, PriorityLevel.MEDIUM)
         )
-        val conflictingSchedule = createSchedule(conflictingSessions)
-        
+
+        val allSessions = course1Sessions + course2Sessions + course3Sessions
+        val conflictingSchedule = createSchedule(allSessions)
+
         val result = priorityDropLogic.apply(conflictingSchedule, Constraints())
-        
-        if (result != null) {
-            assertTrue(result.isPartial || !result.hasConflicts())
-        }
+
+        assertNotNull(result)
+        assertTrue(result!!.isPartial)
+        assertFalse(result.hasConflicts())
     }
     
     @Test
