@@ -57,7 +57,9 @@ class RamadanDetectorTest {
         // Test that the detector uses the Hijri calendar algorithm
         // June 15, 2026 should not be during Ramadan (Ramadan 2026 is ~Feb 18 - Mar 19)
         val testDate = LocalDate.of(2026, 6, 15)
-        val (start, end) = HijriCalendar.getRamadanStartEnd(2026)
+        val result = HijriCalendar.getRamadanStartEnd(2026)
+        org.junit.Assert.assertNotNull("Ramadan 2026 should be found", result)
+        val (start, end) = result!!
 
         // Verify the calculated Ramadan period doesn't include June 15
         val isInCalculatedRamadan = testDate in start..end
@@ -93,7 +95,9 @@ class RamadanDetectorTest {
         val years = listOf(2024, 2025, 2026, 2027)
 
         years.forEach { year ->
-            val (start, end) = HijriCalendar.getRamadanStartEnd(year)
+            val result = HijriCalendar.getRamadanStartEnd(year)
+            org.junit.Assert.assertNotNull("Ramadan $year should be found", result)
+            val (start, end) = result!!
 
             // Verify Ramadan is approximately 29-30 days (Islamic months can be 29 or 30 days)
             val daysBetween = java.time.Duration.between(

@@ -11,7 +11,7 @@ object HijriCalendar {
     private val LEAP_YEAR_POSITIONS = setOf(2, 5, 7, 10, 13, 16, 18, 21, 24, 26, 29)
 
     fun toHijri(gregorian: LocalDate): HijriDate {
-        val epochDate = LocalDate.of(622, 7, 16)
+        val epochDate = LocalDate.of(622, 7, 18)
         if (gregorian.isBefore(epochDate)) {
             throw IllegalArgumentException("Gregorian date $gregorian is before Hijri epoch ($epochDate)")
         }
@@ -54,9 +54,10 @@ object HijriCalendar {
     }
 
     fun fromHijri(hijri: HijriDate): LocalDate {
-        if (hijri.year <= 0) {
-            return LocalDate.of(622, 7, 16)
-        }
+        require(hijri.year > 0) { "Hijri year must be positive, got ${hijri.year}" }
+        require(hijri.month in 1..12) { "Hijri month must be in 1..12, got ${hijri.month}" }
+        val maxDay = getMonthLength(hijri.month, hijri.year)
+        require(hijri.day in 1..maxDay) { "Hijri day must be in 1..$maxDay for month ${hijri.month}/year ${hijri.year}, got ${hijri.day}" }
 
         var totalDays = 0
         val completeCycles = (hijri.year - 1) / 30

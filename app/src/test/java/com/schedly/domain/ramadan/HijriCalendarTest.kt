@@ -17,15 +17,42 @@ class HijriCalendarTest {
 
     @Test
     fun `toHijri converts Islamic epoch correctly`() {
-        // Islamic epoch: July 16, 622 CE = 1 Muharram 1 AH
-        val epoch = LocalDate.of(622, 7, 16)
+        // Islamic epoch: July 18, 622 CE = 1 Muharram 1 AH (aligned with HIJRI_EPOCH_JULIAN_DAY)
+        val epoch = LocalDate.of(622, 7, 18)
         val hijri = HijriCalendar.toHijri(epoch)
 
-        // The Kuwaiti algorithm should return year 1 for the epoch
-        // Allow for small calculation variations
-        assertTrue("Year should be 1 or close, got ${hijri.year}", hijri.year in 1..2)
-        assertTrue("Month should be 1 or close, got ${hijri.month}", hijri.month in 1..2)
-        assertTrue("Day should be around 1, got ${hijri.day}", hijri.day in 1..5)
+        assertEquals(1, hijri.year)
+        assertEquals(1, hijri.month)
+        assertEquals(1, hijri.day)
+    }
+
+    @Test
+    fun `toHijri and fromHijri are bidirectional for epoch dates 622-07-16 to 622-07-19`() {
+        // July 16 and 17 are before the epoch and should throw
+        assertThrowsDatesBeforeEpoch(622, 7, 16)
+        assertThrowsDatesBeforeEpoch(622, 7, 17)
+
+        // July 18 is the epoch (1,1,1) - test bidirectional consistency
+        val epochDate = LocalDate.of(622, 7, 18)
+        val hijriEpoch = HijriCalendar.toHijri(epochDate)
+        assertEquals(HijriDate(1, 1, 1), hijriEpoch)
+        val backToEpoch = HijriCalendar.fromHijri(HijriDate(1, 1, 1))
+        assertEquals(epochDate, backToEpoch)
+
+        // July 19 is epoch + 1 day (1,1,2) - test bidirectional consistency
+        val dayAfterEpoch = LocalDate.of(622, 7, 19)
+        val hijriDayAfter = HijriCalendar.toHijri(dayAfterEpoch)
+        assertEquals(HijriDate(1, 1, 2), hijriDayAfter)
+        val backToDayAfter = HijriCalendar.fromHijri(HijriDate(1, 1, 2))
+        assertEquals(dayAfterEpoch, backToDayAfter)
+    }
+
+    private fun assertThrowsDatesBeforeEpoch(year: Int, month: Int, day: Int) {
+        val date = LocalDate.of(year, month, day)
+        val exception = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.toHijri(date)
+        }
+        assertTrue("Exception should mention 'before'", exception.message?.contains("before") == true)
     }
 
     @Test
@@ -78,14 +105,74 @@ class HijriCalendarTest {
         val hijriDate = HijriDate(1, 1, 1)
         val gregorian = HijriCalendar.fromHijri(hijriDate)
 
-        val expectedEpoch = LocalDate.of(622, 7, 16)
-        val daysDiff = Math.abs(java.time.Duration.between(
-            expectedEpoch.atStartOfDay(),
-            gregorian.atStartOfDay()
-        ).toDays())
+        val expectedEpoch = LocalDate.of(622, 7, 18)
+        assertEquals("HijriDate(1,1,1) should convert to July 18, 622", expectedEpoch, gregorian)
+    }
 
-        // Allow ±5 days for algorithm approximation at epoch boundary
-        assertTrue("Should be within ±5 days of epoch, got $daysDiff days diff", daysDiff <= 5)
+    @Test
+    fun `fromHijri throws exception for invalid year`() {
+        val exception = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.fromHijri(HijriDate(0, 1, 1))
+        }
+        assertTrue("Exception should mention 'year'", exception.message?.contains("year") == true)
+
+        val exceptionNegative = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.fromHijri(HijriDate(-5, 1, 1))
+        }
+        assertTrue("Exception should mention 'year'", exceptionNegative.message?.contains("year") == true)
+    }
+
+    @Test
+    fun `fromHijri throws exception for invalid month`() {
+        val exceptionZero = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.fromHijri(HijriDate(1, 0, 1))
+        }
+        assertTrue("Exception should mention 'month'", exceptionZero.message?.contains("month") == true)
+
+        val exceptionNegative = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.fromHijri(HijriDate(1, -3, 1))
+        }
+        assertTrue("Exception should mention 'month'", exceptionNegative.message?.contains("month") == true)
+
+        val exceptionTooHigh = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.fromHijri(HijriDate(1, 13, 1))
+        }
+        assertTrue("Exception should mention 'month'", exceptionTooHigh.message?.contains("month") == true)
+    }
+
+    @Test
+    fun `fromHijri throws exception for invalid day`() {
+        val exceptionZero = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.fromHijri(HijriDate(1, 1, 0))
+        }
+        assertTrue("Exception should mention 'day'", exceptionZero.message?.contains("day") == true)
+
+        val exceptionNegative = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.fromHijri(HijriDate(1, 1, -5))
+        }
+        assertTrue("Exception should mention 'day'", exceptionNegative.message?.contains("day") == true)
+
+        val exceptionTooHigh = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.fromHijri(HijriDate(1, 1, 31))
+        }
+        assertTrue("Exception should mention 'day'", exceptionTooHigh.message?.contains("day") == true)
+
+        val exceptionLeapMonthTooHigh = org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+            HijriCalendar.fromHijri(HijriDate(2, 12, 31))
+        }
+        assertTrue("Exception should mention 'day'", exceptionLeapMonthTooHigh.message?.contains("day") == true)
+    }
+
+    @Test
+    fun `fromHijri accepts valid edge case dates`() {
+        val epoch = HijriCalendar.fromHijri(HijriDate(1, 1, 1))
+        assertEquals(LocalDate.of(622, 7, 18), epoch)
+
+        val lastDayOfMonth1 = HijriCalendar.fromHijri(HijriDate(1, 1, 30))
+        assertEquals(epoch.plusDays(29), lastDayOfMonth1)
+
+        val lastDayOfLeapMonth12 = HijriCalendar.fromHijri(HijriDate(2, 12, 30))
+        org.junit.Assert.assertNotNull(lastDayOfLeapMonth12)
     }
 
     @Test
@@ -117,7 +204,9 @@ class HijriCalendarTest {
 
     @Test
     fun `getRamadanStartEnd returns valid date range for 2024`() {
-        val (start, end) = HijriCalendar.getRamadanStartEnd(2024)
+        val result = HijriCalendar.getRamadanStartEnd(2024)
+        org.junit.Assert.assertNotNull("Ramadan 2024 should be found", result)
+        val (start, end) = result!!
 
         // Ramadan 2024 was approximately March 11 - April 9, 2024
         // Allow for algorithm approximation (±3 days)
@@ -135,7 +224,9 @@ class HijriCalendarTest {
 
     @Test
     fun `getRamadanStartEnd returns valid date range for 2025`() {
-        val (start, end) = HijriCalendar.getRamadanStartEnd(2025)
+        val result = HijriCalendar.getRamadanStartEnd(2025)
+        org.junit.Assert.assertNotNull("Ramadan 2025 should be found", result)
+        val (start, end) = result!!
 
         // Ramadan 2025 is expected around March 1 - March 30, 2025
         assertTrue("Ramadan should start around March 2025", start.monthValue in 2..3)
@@ -150,7 +241,9 @@ class HijriCalendarTest {
 
     @Test
     fun `getRamadanStartEnd returns valid date range for 2026`() {
-        val (start, end) = HijriCalendar.getRamadanStartEnd(2026)
+        val result = HijriCalendar.getRamadanStartEnd(2026)
+        org.junit.Assert.assertNotNull("Ramadan 2026 should be found", result)
+        val (start, end) = result!!
 
         // Ramadan 2026 is expected around February 18 - March 19, 2026
         assertTrue("Ramadan should start around February 2026", start.monthValue in 2..3)
@@ -168,7 +261,9 @@ class HijriCalendarTest {
         val years = listOf(2024, 2025, 2026, 2027, 2028)
 
         years.forEach { year ->
-            val (start, end) = HijriCalendar.getRamadanStartEnd(year)
+            val result = HijriCalendar.getRamadanStartEnd(year)
+            org.junit.Assert.assertNotNull("Ramadan $year should be found", result)
+            val (start, end) = result!!
 
             assertTrue("Ramadan start should be before end for $year", start.isBefore(end))
 
