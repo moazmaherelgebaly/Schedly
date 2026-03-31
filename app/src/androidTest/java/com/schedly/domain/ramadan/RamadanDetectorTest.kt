@@ -40,14 +40,6 @@ class RamadanDetectorTest {
         }
     }
 
-    @After
-    fun teardown() {
-        // Reset Ramadan offset to default to prevent test state leakage
-        runTest {
-            preferencesManager.setRamadanOffset(0)
-        }
-    }
-
     @Test
     fun `getCurrentTimeMode returns Normal when not in Ramadan`() = runTest {
         // Test with a date that's definitely not Ramadan (June 2026)
