@@ -87,7 +87,7 @@ class SessionDaoTest {
     fun `getAll returns all sessions`() = runTest {
         courseDao.insert(createTestCourse())
         val session1 = createTestSession("session-1")
-        val session2 = createTestSession("session-2")
+        val session2 = createTestSession("session-2", period = 2)
 
         sessionDao.insert(session1)
         sessionDao.insert(session2)

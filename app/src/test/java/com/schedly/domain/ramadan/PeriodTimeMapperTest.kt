@@ -2,6 +2,7 @@ package com.schedly.domain.ramadan
 
 import com.schedly.domain.model.TimeMode
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 /**
@@ -84,19 +85,15 @@ class PeriodTimeMapperTest {
 
     @Test
     fun `getPeriodTime throws exception for invalid period`() {
-        try {
+        val exception0 = assertThrows(IllegalArgumentException::class.java) {
             PeriodTimeMapper.getPeriodTime(0, TimeMode.Normal)
-            assert(false) { "Expected IllegalArgumentException" }
-        } catch (e: IllegalArgumentException) {
-            assertEquals("Period must be 1-6, got 0", e.message)
         }
+        assertEquals("Period must be 1-6, got 0", exception0.message)
 
-        try {
+        val exception7 = assertThrows(IllegalArgumentException::class.java) {
             PeriodTimeMapper.getPeriodTime(7, TimeMode.Normal)
-            assert(false) { "Expected IllegalArgumentException" }
-        } catch (e: IllegalArgumentException) {
-            assertEquals("Period must be 1-6, got 7", e.message)
         }
+        assertEquals("Period must be 1-6, got 7", exception7.message)
     }
 
     @Test

@@ -78,17 +78,28 @@ object HijriCalendar {
     }
 
     fun getRamadanStartEnd(gregorianYear: Int): Pair<LocalDate, LocalDate> {
-        val hijriYearStart = gregorianToHijriYear(gregorianYear)
-        val ramadanStart1 = fromHijri(HijriDate(hijriYearStart, 9, 1))
-        val ramadanStart2 = fromHijri(HijriDate(hijriYearStart + 1, 9, 1))
-
-        return if (ramadanStart1.year == gregorianYear) {
-            ramadanStart1 to ramadanStart1.plusDays(29)
-        } else if (ramadanStart2.year == gregorianYear) {
-            ramadanStart2 to ramadanStart2.plusDays(29)
-        } else {
-            ramadanStart1 to ramadanStart1.plusDays(29)
+        // Search for Ramadan that falls within the given Gregorian year
+        // Start from an approximate Hijri year and search nearby years
+        val approxHijriYear = gregorianToHijriYear(gregorianYear)
+        
+        // Check Ramadan for hijriYear-1, hijriYear, and hijriYear+1 to find the one that falls in gregorianYear
+        for (hijriYearOffset in -1..1) {
+            val hijriYear = approxHijriYear + hijriYearOffset
+            val ramadanStart = fromHijri(HijriDate(hijriYear, 9, 1))
+            
+            if (ramadanStart.year == gregorianYear) {
+                return ramadanStart to ramadanStart.plusDays(29)
+            }
         }
+        
+        // If no exact match found, throw an exception with diagnostic info
+        val ramadanStart1 = fromHijri(HijriDate(approxHijriYear, 9, 1))
+        val ramadanStart2 = fromHijri(HijriDate(approxHijriYear + 1, 9, 1))
+        throw IllegalStateException(
+            "Could not determine Ramadan dates for Gregorian year $gregorianYear. " +
+            "approxHijriYear=$approxHijriYear, ramadanStart1=$ramadanStart1 (year=${ramadanStart1.year}), " +
+            "ramadanStart2=$ramadanStart2 (year=${ramadanStart2.year})"
+        )
     }
 
     fun isLeapYear(hijriYear: Int): Boolean {

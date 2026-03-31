@@ -95,9 +95,10 @@ class ConstraintsConverter {
     }
 
     @TypeConverter
-    fun toDayPeriod(jsonString: String): DayPeriod? {
+    fun toDayPeriod(jsonString: String): DayPeriod {
         val serializable = json.decodeFromString<ConstraintsSerializer.SerializableDayPeriod>(jsonString)
-        val day = safeValueOfDayOfWeek(serializable.day) ?: return null
+        val day = safeValueOfDayOfWeek(serializable.day)
+            ?: throw IllegalArgumentException("Invalid day: ${serializable.day}. Expected one of: ${DayOfWeek.values().joinToString { it.name }}")
         return DayPeriod(day, serializable.period)
     }
 }

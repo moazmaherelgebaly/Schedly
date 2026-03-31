@@ -1,5 +1,6 @@
 package com.schedly.data.repository
 
+import androidx.room.withTransaction
 import com.schedly.data.db.AppDatabase
 import com.schedly.data.db.dao.CourseDao
 import com.schedly.data.db.dao.SessionDao
@@ -12,7 +13,6 @@ import com.schedly.domain.model.Course
 import com.schedly.domain.model.Session
 import com.schedly.domain.repository.ICourseRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.UUID
 
@@ -58,20 +58,18 @@ class CourseRepositoryImpl(
                 }
             }
 
-            database.runInTransaction {
-                runBlocking {
-                    val courseEntity = CourseEntity.fromDomain(course)
-                    val rowId = courseDao.insert(courseEntity)
-                    if (rowId == -1L) {
-                        throw ValidationError.InvalidCourseName("Failed to insert course")
-                    }
+            database.withTransaction {
+                val courseEntity = CourseEntity.fromDomain(course)
+                val rowId = courseDao.insert(courseEntity)
+                if (rowId == -1L) {
+                    throw ValidationError.InvalidCourseName("Failed to insert course")
+                }
 
-                    sessions.forEach { session ->
-                        val sessionEntity = SessionEntity.fromDomain(session.copy(courseId = course.id))
-                        val sessionRowId = sessionDao.insert(sessionEntity)
-                        if (sessionRowId == -1L) {
-                            throw RoomConflictException(session.day, session.period, session.room)
-                        }
+                sessions.forEach { session ->
+                    val sessionEntity = SessionEntity.fromDomain(session.copy(courseId = course.id))
+                    val sessionRowId = sessionDao.insert(sessionEntity)
+                    if (sessionRowId == -1L) {
+                        throw RoomConflictException(session.day, session.period, session.room)
                     }
                 }
             }
@@ -113,16 +111,17 @@ class CourseRepositoryImpl(
                 }
             }
 
-            database.runInTransaction {
-                runBlocking {
-                    val courseEntity = CourseEntity.fromDomain(course)
-                    courseDao.update(courseEntity)
+            database.withTransaction {
+                val courseEntity = CourseEntity.fromDomain(course)
+                courseDao.update(courseEntity)
 
-                    sessionDao.deleteSessionsForCourse(course.id.toString())
+                sessionDao.deleteSessionsForCourse(course.id.toString())
 
-                    sessions.forEach { session ->
-                        val sessionEntity = SessionEntity.fromDomain(session)
-                        sessionDao.insert(sessionEntity)
+                sessions.forEach { session ->
+                    val sessionEntity = SessionEntity.fromDomain(session.copy(courseId = course.id))
+                    val sessionRowId = sessionDao.insert(sessionEntity)
+                    if (sessionRowId == -1L) {
+                        throw RoomConflictException(session.day, session.period, session.room)
                     }
                 }
             }

@@ -7,6 +7,7 @@ import com.schedly.data.datastore.dataStore
 import com.schedly.domain.model.TimeMode
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -28,6 +29,14 @@ class RamadanDetectorTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         preferencesManager = PreferencesManager(context.dataStore)
         ramadanDetector = RamadanDetector(preferencesManager)
+    }
+
+    @After
+    fun teardown() {
+        // Reset Ramadan offset to default to prevent test state leakage
+        runTest {
+            preferencesManager.setRamadanOffset(0)
+        }
     }
 
     @Test
@@ -73,9 +82,6 @@ class RamadanDetectorTest {
 
     @Test
     fun `Ramadan offset defaults to zero`() = runTest {
-        // Reset offset first
-        ramadanDetector.setRamadanOffset(0)
-
         val offset = ramadanDetector.getRamadanOffset()
         assertEquals(0, offset)
     }

@@ -339,10 +339,10 @@ class CourseRepositoryTest {
         val courseId = UUID.randomUUID()
         val course = createTestCourse(courseId)
         val sessions = listOf(
-            createTestSession(courseId = courseId, group = "G1"),
-            createTestSession(courseId = courseId, group = "G2"),
-            createTestSession(courseId = courseId, type = SessionType.SECTION, group = "G1"),
-            createTestSession(courseId = courseId, type = SessionType.SECTION, group = "G2")
+            createTestSession(courseId = courseId, group = "G1", period = 1),
+            createTestSession(courseId = courseId, group = "G2", period = 2),
+            createTestSession(courseId = courseId, type = SessionType.SECTION, group = "G1", period = 3),
+            createTestSession(courseId = courseId, type = SessionType.SECTION, group = "G2", period = 4)
         )
         repository.insertCourse(course, sessions)
 

@@ -133,7 +133,7 @@ class HijriCalendarTest {
             end.atStartOfDay()
         ).toDays() + 1
 
-        assertEquals("Ramadan should be 30 days", 30, daysBetween)
+        assertEquals("Ramadan should be 30 days", 30L, daysBetween)
         assertTrue("Ramadan should end after it starts", end.isAfter(start))
     }
 
@@ -149,7 +149,7 @@ class HijriCalendarTest {
             end.atStartOfDay()
         ).toDays() + 1
 
-        assertEquals("Ramadan should be 30 days", 30, daysBetween)
+        assertEquals("Ramadan should be 30 days", 30L, daysBetween)
     }
 
     @Test
@@ -164,7 +164,7 @@ class HijriCalendarTest {
             end.atStartOfDay()
         ).toDays() + 1
 
-        assertEquals("Ramadan should be 30 days", 30, daysBetween)
+        assertEquals("Ramadan should be 30 days", 30L, daysBetween)
     }
 
     @Test
@@ -181,7 +181,7 @@ class HijriCalendarTest {
                 end.atStartOfDay()
             ).toDays() + 1
 
-            assertEquals("Ramadan should be 30 days for $year", 30, daysBetween)
+            assertEquals("Ramadan should be 30 days for $year", 30L, daysBetween)
         }
     }
 
