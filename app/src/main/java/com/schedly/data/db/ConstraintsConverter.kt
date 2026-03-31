@@ -45,7 +45,7 @@ class ConstraintsConverter {
                 ConstraintsSerializer.SerializableDayPeriod(it.day.name, it.period)
             },
             excludedSessions = constraints.excludedSessions.map {
-                ConstraintsSerializer.SerializableSessionRef(it.courseId.toString(), it.sessionId.toString())
+                ConstraintsSerializer.SerializableSessionRef(it.courseId.toString(), it.type.name, it.group)
             },
             allowGaps = constraints.allowGaps,
             matchGroups = constraints.matchGroups,
@@ -71,8 +71,8 @@ class ConstraintsConverter {
             },
             excludedSessions = serializable.excludedSessions.mapNotNull {
                 val courseId = safeUUIDFromString(it.courseId) ?: return@mapNotNull null
-                val sessionId = safeUUIDFromString(it.sessionId) ?: return@mapNotNull null
-                SessionRef(courseId, sessionId)
+                val type = safeValueOfSessionType(it.type) ?: return@mapNotNull null
+                SessionRef(courseId, type, it.group)
             },
             allowGaps = serializable.allowGaps,
             matchGroups = serializable.matchGroups,
@@ -122,7 +122,7 @@ private object ConstraintsSerializer {
     data class SerializableDayPeriod(val day: String, val period: Int)
 
     @kotlinx.serialization.Serializable
-    data class SerializableSessionRef(val courseId: String, val sessionId: String)
+    data class SerializableSessionRef(val courseId: String, val type: String, val group: String)
 
     @kotlinx.serialization.Serializable
     data class SerializableInstructorPref(val courseId: String, val type: String, val instructor: String)
