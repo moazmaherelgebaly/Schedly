@@ -5,6 +5,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.schedly.data.datastore.PreferencesManager
 import com.schedly.data.datastore.dataStore
 import com.schedly.domain.model.TimeMode
+import com.schedly.domain.repository.PreferencesRepository
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -21,21 +22,22 @@ import java.time.LocalDate
  */
 class RamadanDetectorTest {
 
-    private lateinit var preferencesManager: PreferencesManager
+    private lateinit var preferencesRepository: PreferencesRepository
     private lateinit var ramadanDetector: RamadanDetector
 
     @Before
     fun setup() {
         val context = ApplicationProvider.getApplicationContext<Context>()
-        preferencesManager = PreferencesManager(context.dataStore)
-        ramadanDetector = RamadanDetector(preferencesManager)
+        val preferencesManager = PreferencesManager(context.dataStore)
+        preferencesRepository = preferencesManager
+        ramadanDetector = RamadanDetector(preferencesRepository)
     }
 
     @After
     fun teardown() {
         // Reset Ramadan offset to default to prevent test state leakage
         runTest {
-            preferencesManager.setRamadanOffset(0)
+            preferencesRepository.setRamadanOffset(0)
         }
     }
 

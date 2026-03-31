@@ -5,6 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import com.schedly.app.BuildConfig
 import com.schedly.data.db.dao.ConstraintsDao
 import com.schedly.data.db.dao.CourseDao
 import com.schedly.data.db.dao.SessionDao
@@ -30,13 +31,18 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
+                val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "schedly_database"
                 )
-                    .fallbackToDestructiveMigrationOnDowngrade()
-                    .build()
+
+                // Only allow destructive downgrade in debug builds
+                if (BuildConfig.ENABLE_DESTRUCTIVE_DOWNGRADE) {
+                    builder.fallbackToDestructiveMigrationOnDowngrade()
+                }
+
+                val instance = builder.build()
                 INSTANCE = instance
                 instance
             }

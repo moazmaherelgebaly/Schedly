@@ -7,13 +7,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.schedly.domain.repository.PreferencesRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "schedly_preferences")
 
-class PreferencesManager(private val dataStore: DataStore<Preferences>) {
+class PreferencesManager(private val dataStore: DataStore<Preferences>) : PreferencesRepository {
 
     companion object {
         val RAMADAN_OFFSET_KEY = intPreferencesKey("ramadan_offset")
@@ -27,13 +28,13 @@ class PreferencesManager(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    suspend fun getRamadanOffset(): Int {
+    override suspend fun getRamadanOffset(): Int {
         return dataStore.data.map { preferences ->
             preferences[RAMADAN_OFFSET_KEY] ?: 0
         }.firstOrNull() ?: 0
     }
 
-    suspend fun setRamadanOffset(offset: Int) {
+    override suspend fun setRamadanOffset(offset: Int) {
         dataStore.edit { preferences ->
             preferences[RAMADAN_OFFSET_KEY] = offset
         }

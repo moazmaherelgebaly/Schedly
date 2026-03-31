@@ -1,11 +1,11 @@
 package com.schedly.domain.ramadan
 
-import com.schedly.data.datastore.PreferencesManager
 import com.schedly.domain.model.TimeMode
+import com.schedly.domain.repository.PreferencesRepository
 import java.time.LocalDate
 
 class RamadanDetector(
-    private val preferencesManager: PreferencesManager
+    private val preferencesRepository: PreferencesRepository
 ) {
 
     suspend fun getCurrentTimeMode(): TimeMode {
@@ -14,7 +14,7 @@ class RamadanDetector(
 
     suspend fun isRamadanToday(): Boolean {
         val today = LocalDate.now()
-        val offset = preferencesManager.getRamadanOffset()
+        val offset = preferencesRepository.getRamadanOffset()
 
         // Check Ramadan for current year and previous year (Ramadan can span two Gregorian years)
         val (start1, end1) = HijriCalendar.getRamadanStartEnd(today.year)
@@ -34,10 +34,10 @@ class RamadanDetector(
     }
 
     suspend fun setRamadanOffset(offset: Int) {
-        preferencesManager.setRamadanOffset(offset)
+        preferencesRepository.setRamadanOffset(offset)
     }
 
     suspend fun getRamadanOffset(): Int {
-        return preferencesManager.getRamadanOffset()
+        return preferencesRepository.getRamadanOffset()
     }
 }

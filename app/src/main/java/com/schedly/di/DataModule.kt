@@ -11,6 +11,7 @@ import com.schedly.data.repository.ConstraintsRepositoryImpl
 import com.schedly.data.repository.CourseRepositoryImpl
 import com.schedly.domain.repository.IConstraintsRepository
 import com.schedly.domain.repository.ICourseRepository
+import com.schedly.domain.repository.PreferencesRepository
 import com.schedly.domain.ramadan.RamadanDetector
 import dagger.Module
 import dagger.Provides
@@ -49,8 +50,8 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideRamadanDetector(preferencesManager: PreferencesManager): RamadanDetector {
-        return RamadanDetector(preferencesManager)
+    fun provideRamadanDetector(preferencesRepository: PreferencesRepository): RamadanDetector {
+        return RamadanDetector(preferencesRepository)
     }
 
     @Provides
@@ -69,5 +70,11 @@ object DataModule {
         constraintsDao: ConstraintsDao
     ): IConstraintsRepository {
         return ConstraintsRepositoryImpl(constraintsDao)
+    }
+
+    @Provides
+    @Singleton
+    fun providePreferencesRepository(preferencesManager: PreferencesManager): PreferencesRepository {
+        return preferencesManager
     }
 }

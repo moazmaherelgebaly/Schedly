@@ -10,6 +10,7 @@ import org.junit.Assert.assertNotNull
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.fail
 import java.io.IOException
 
 /**
@@ -90,7 +91,7 @@ class AppDatabaseTest {
                     """
                 )
                 // If we reach here, foreign keys are not enforced
-                assert(false) { "Foreign key constraint should have been enforced" }
+                fail("Foreign key constraint should have been enforced")
             } catch (e: Exception) {
                 // Expected: foreign key constraint failed
             }
@@ -172,7 +173,7 @@ class AppDatabaseTest {
                     """
                 )
                 // If we reach here, unique constraint was not enforced
-                assert(false) { "Unique constraint should have been enforced" }
+                fail("Unique constraint should have been enforced")
             } catch (e: Exception) {
                 // Expected: UNIQUE constraint failed
             }

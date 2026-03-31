@@ -51,14 +51,10 @@ class HijriCalendarTest {
         assertTrue("Day should be in Ramadan, got ${hijri.day}", hijri.day in 1..30)
     }
 
-    @Test
-    fun `toHijri returns zero for dates before Islamic epoch`() {
+    @Test(expected = IllegalArgumentException::class)
+    fun `toHijri throws exception for dates before Islamic epoch`() {
         val date = LocalDate.of(600, 1, 1)
-        val hijri = HijriCalendar.toHijri(date)
-
-        assertEquals(0, hijri.year)
-        assertEquals(0, hijri.month)
-        assertEquals(0, hijri.day)
+        HijriCalendar.toHijri(date)
     }
 
     @Test

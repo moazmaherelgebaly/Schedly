@@ -160,6 +160,9 @@ class CourseRepositoryTest {
         val result = repository.insertCourse(course, sessions)
 
         assertTrue(result.isFailure)
+        val exception = result.exceptionOrNull()
+        assertTrue(exception is ValidationError.InvalidPeriod)
+        assertTrue(exception?.message?.contains("period", ignoreCase = true) == true)
     }
 
     @Test

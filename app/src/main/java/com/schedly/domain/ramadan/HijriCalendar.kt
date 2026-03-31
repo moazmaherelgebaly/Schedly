@@ -13,7 +13,7 @@ object HijriCalendar {
     fun toHijri(gregorian: LocalDate): HijriDate {
         val epochDate = LocalDate.of(622, 7, 16)
         if (gregorian.isBefore(epochDate)) {
-            return HijriDate(0, 0, 0)
+            throw IllegalArgumentException("Gregorian date $gregorian is before Hijri epoch ($epochDate)")
         }
         if (gregorian.isEqual(epochDate)) {
             return HijriDate(1, 1, 1)
