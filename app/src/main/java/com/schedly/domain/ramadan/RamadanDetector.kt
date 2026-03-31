@@ -17,20 +17,29 @@ class RamadanDetector(
         val offset = preferencesRepository.getRamadanOffset()
 
         // Check Ramadan for current year and previous year (Ramadan can span two Gregorian years)
-        val (start1, end1) = HijriCalendar.getRamadanStartEnd(today.year)
-        val adjustedStart1 = start1.plusDays(offset.toLong())
-        val adjustedEnd1 = end1.plusDays(offset.toLong())
+        val ramadanCurrentYear = HijriCalendar.getRamadanStartEnd(today.year)
+        if (ramadanCurrentYear != null) {
+            val (start1, end1) = ramadanCurrentYear
+            val adjustedStart1 = start1.plusDays(offset.toLong())
+            val adjustedEnd1 = end1.plusDays(offset.toLong())
 
-        if (today in adjustedStart1..adjustedEnd1) {
-            return true
+            if (today in adjustedStart1..adjustedEnd1) {
+                return true
+            }
         }
 
         // Check previous year's Ramadan (may extend into current year)
-        val (start2, end2) = HijriCalendar.getRamadanStartEnd(today.year - 1)
-        val adjustedStart2 = start2.plusDays(offset.toLong())
-        val adjustedEnd2 = end2.plusDays(offset.toLong())
+        val ramadanPreviousYear = HijriCalendar.getRamadanStartEnd(today.year - 1)
+        if (ramadanPreviousYear != null) {
+            val (start2, end2) = ramadanPreviousYear
+            val adjustedStart2 = start2.plusDays(offset.toLong())
+            val adjustedEnd2 = end2.plusDays(offset.toLong())
 
-        return today in adjustedStart2..adjustedEnd2
+            return today in adjustedStart2..adjustedEnd2
+        }
+
+        // If Ramadan dates cannot be determined, treat as "not Ramadan"
+        return false
     }
 
     suspend fun setRamadanOffset(offset: Int) {

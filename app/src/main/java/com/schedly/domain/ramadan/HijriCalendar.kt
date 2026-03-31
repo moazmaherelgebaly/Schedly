@@ -77,36 +77,31 @@ object HijriCalendar {
         return LocalDate.ofEpochDay((julianDay - 2440588.5).toLong())
     }
 
-    fun getRamadanStartEnd(gregorianYear: Int): Pair<LocalDate, LocalDate> {
+    fun getRamadanStartEnd(gregorianYear: Int): Pair<LocalDate, LocalDate>? {
         // Search for Ramadan that falls within the given Gregorian year
         // Start from an approximate Hijri year and search nearby years
         val approxHijriYear = gregorianToHijriYear(gregorianYear)
-        
+
         // Check Ramadan for hijriYear-1, hijriYear, and hijriYear+1 to find the one that falls in gregorianYear
         for (hijriYearOffset in -1..1) {
             val hijriYear = approxHijriYear + hijriYearOffset
             val ramadanStart = fromHijri(HijriDate(hijriYear, 9, 1))
-            
+
             if (ramadanStart.year == gregorianYear) {
-                return ramadanStart to ramadanStart.plusDays(29)
+                val daysInRamadan = getMonthLength(9, hijriYear)
+                return ramadanStart to ramadanStart.plusDays((daysInRamadan - 1).toLong())
             }
         }
-        
-        // If no exact match found, throw an exception with diagnostic info
-        val ramadanStart1 = fromHijri(HijriDate(approxHijriYear, 9, 1))
-        val ramadanStart2 = fromHijri(HijriDate(approxHijriYear + 1, 9, 1))
-        throw IllegalStateException(
-            "Could not determine Ramadan dates for Gregorian year $gregorianYear. " +
-            "approxHijriYear=$approxHijriYear, ramadanStart1=$ramadanStart1 (year=${ramadanStart1.year}), " +
-            "ramadanStart2=$ramadanStart2 (year=${ramadanStart2.year})"
-        )
+
+        // If no exact match found, return null instead of throwing
+        return null
     }
 
     fun isLeapYear(hijriYear: Int): Boolean {
         return hijriYear % 30 in LEAP_YEAR_POSITIONS
     }
 
-    private fun getMonthLength(month: Int, year: Int): Int {
+    internal fun getMonthLength(month: Int, year: Int): Int {
         return when {
             month in 1..12 -> {
                 val baseLength = STANDARD_MONTH_LENGTHS[month - 1]

@@ -31,20 +31,22 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val builder = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "schedly_database"
-                )
+                INSTANCE ?: run {
+                    val builder = Room.databaseBuilder(
+                        context.applicationContext,
+                        AppDatabase::class.java,
+                        "schedly_database"
+                    )
 
-                // Only allow destructive downgrade in debug builds
-                if (BuildConfig.ENABLE_DESTRUCTIVE_DOWNGRADE) {
-                    builder.fallbackToDestructiveMigrationOnDowngrade()
+                    // Only allow destructive downgrade in debug builds
+                    if (BuildConfig.ENABLE_DESTRUCTIVE_DOWNGRADE) {
+                        builder.fallbackToDestructiveMigrationOnDowngrade()
+                    }
+
+                    val instance = builder.build()
+                    INSTANCE = instance
+                    instance
                 }
-
-                val instance = builder.build()
-                INSTANCE = instance
-                instance
             }
         }
     }

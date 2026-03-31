@@ -1,16 +1,18 @@
 package com.schedly.data.db
 
 import android.content.Context
+import android.database.sqlite.SQLiteConstraintException
 import androidx.room.Room
 import androidx.room.testing.MigrationTestHelper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.fail
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.junit.fail
 import java.io.IOException
 
 /**
@@ -27,9 +29,8 @@ class AppDatabaseTest {
 
     @get:Rule
     val helper: MigrationTestHelper = MigrationTestHelper(
-        ApplicationProvider.getApplicationContext<Context>(),
-        AppDatabase::class.java.canonicalName,
-        listOf() // No custom migrations yet for MVP
+        InstrumentationRegistry.getInstrumentation(),
+        AppDatabase::class.java
     )
 
     @Test
@@ -92,8 +93,9 @@ class AppDatabaseTest {
                 )
                 // If we reach here, foreign keys are not enforced
                 fail("Foreign key constraint should have been enforced")
-            } catch (e: Exception) {
+            } catch (e: SQLiteConstraintException) {
                 // Expected: foreign key constraint failed
+                assert(e.message?.contains("FOREIGN KEY") == true || e.localizedMessage?.contains("FOREIGN KEY") == true)
             }
 
             close()
@@ -174,8 +176,9 @@ class AppDatabaseTest {
                 )
                 // If we reach here, unique constraint was not enforced
                 fail("Unique constraint should have been enforced")
-            } catch (e: Exception) {
+            } catch (e: SQLiteConstraintException) {
                 // Expected: UNIQUE constraint failed
+                assert(e.message?.contains("UNIQUE") == true || e.localizedMessage?.contains("UNIQUE") == true)
             }
 
             close()
@@ -266,10 +269,16 @@ class AppDatabaseTest {
                 """
             )
 
-            // Verify constraints exist
+            // Verify constraints exist with id=1
             query("SELECT * FROM constraints WHERE id = 1", emptyArray()).use { cursor ->
                 assertEquals(1, cursor.count)
                 assertNotNull(cursor)
+            }
+
+            // Verify the table contains exactly one row (single-row invariant)
+            query("SELECT COUNT(*) FROM constraints", emptyArray()).use { cursor ->
+                cursor.moveToFirst()
+                assertEquals(1, cursor.getInt(0))
             }
 
             close()
