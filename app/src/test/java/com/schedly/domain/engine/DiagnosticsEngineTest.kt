@@ -82,6 +82,9 @@ class DiagnosticsEngineTest {
 
         assertNotNull(diagnostic)
         assertTrue(diagnostic.constraintImpacts.isNotEmpty())
+        val excludedDayPeriodsImpact = diagnostic.constraintImpacts["Excluded Day-Periods"]
+        assertNotNull(excludedDayPeriodsImpact)
+        assertTrue(excludedDayPeriodsImpact!! > 0)
         assertTrue(diagnostic.hint.contains("eliminating all candidates"))
     }
     

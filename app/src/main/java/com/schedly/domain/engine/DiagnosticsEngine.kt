@@ -325,6 +325,13 @@ class DiagnosticsEngine {
             }
         }
 
+        filtered = filtered.filter { session ->
+            !constraints.excludedDayPeriods.any { excluded ->
+                excluded.day == session.day &&
+                excluded.period == session.period
+            }
+        }
+
         return filtered
     }
 
@@ -339,6 +346,9 @@ class DiagnosticsEngine {
         currentSessions: MutableList<Session>
     ): Int {
         if (index >= courses.size) {
+            if (violatesMinConstraints(currentSessions, constraints)) {
+                return 0
+            }
             return 1
         }
 
@@ -355,6 +365,14 @@ class DiagnosticsEngine {
             }
 
             if (violatesMaxConstraints(newSessions, constraints)) {
+                continue
+            }
+
+            if (violatesExcludedDayPeriods(newSessions, constraints)) {
+                continue
+            }
+
+            if (!constraints.allowGaps && hasGaps(newSessions)) {
                 continue
             }
 
@@ -379,6 +397,22 @@ class DiagnosticsEngine {
     }
 
     /**
+     * Check if sessions have gaps (non-consecutive periods) on the same day.
+     */
+    private fun hasGaps(sessions: List<Session>): Boolean {
+        val sessionsByDay = sessions.groupBy { it.day }
+        for ((_, daySessions) in sessionsByDay) {
+            val sortedPeriods = daySessions.map { it.period }.sorted()
+            for (i in 1 until sortedPeriods.size) {
+                if (sortedPeriods[i] - sortedPeriods[i - 1] > 1) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
+
+    /**
      * Check if max constraints are violated.
      */
     private fun violatesMaxConstraints(
@@ -396,5 +430,40 @@ class DiagnosticsEngine {
         }
 
         return false
+    }
+
+    /**
+     * Check if min constraints are violated.
+     */
+    private fun violatesMinConstraints(
+        sessions: List<Session>,
+        constraints: Constraints
+    ): Boolean {
+        constraints.weekLoadMin?.let { min ->
+            val distinctDays = sessions.map { it.day }.distinct().size
+            if (distinctDays < min) return true
+        }
+
+        constraints.dayLoadMin?.let { min ->
+            val sessionsByDay = sessions.groupingBy { it.day }.eachCount()
+            if (sessionsByDay.any { it.value < min }) return true
+        }
+
+        return false
+    }
+
+    /**
+     * Check if any session violates excluded day-period constraints.
+     */
+    private fun violatesExcludedDayPeriods(
+        sessions: List<Session>,
+        constraints: Constraints
+    ): Boolean {
+        return sessions.any { session ->
+            constraints.excludedDayPeriods.any { excluded ->
+                excluded.day == session.day &&
+                excluded.period == session.period
+            }
+        }
     }
 }
