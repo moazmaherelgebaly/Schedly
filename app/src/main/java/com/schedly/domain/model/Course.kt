@@ -7,7 +7,9 @@ data class Course(
     val id: UUID = UUID.randomUUID(),
     val name: String,
     val createdAt: Instant = Instant.ofEpochMilli(System.currentTimeMillis()),
-    val updatedAt: Instant = Instant.ofEpochMilli(System.currentTimeMillis())
+    val updatedAt: Instant = Instant.ofEpochMilli(System.currentTimeMillis()),
+    val lectures: List<Session> = emptyList(),
+    val sections: List<Session> = emptyList()
 ) {
     fun isValid(): Boolean = name.isNotBlank() && name.length <= 100
 }

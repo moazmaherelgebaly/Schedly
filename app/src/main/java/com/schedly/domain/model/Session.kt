@@ -13,6 +13,8 @@ data class Session(
     val room: String,
     val priority: PriorityLevel
 ) {
+    val dayPeriod: DayPeriod get() = DayPeriod(day, period)
+
     fun isValid(): Boolean {
         val allowedDays = setOf(
             DayOfWeek.SATURDAY,

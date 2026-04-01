@@ -25,10 +25,12 @@ object PeriodTimeMapper {
     fun getPeriodTime(period: Int, mode: TimeMode): Pair<String, String> {
         require(period in 1..6) { "Period must be 1-6, got $period" }
 
-        return when (mode) {
-            is TimeMode.Normal -> normalTimes[period]!!
-            is TimeMode.Ramadan -> ramadanTimes[period]!!
+        val times = when (mode) {
+            is TimeMode.Normal -> normalTimes[period]
+            is TimeMode.Ramadan -> ramadanTimes[period]
         }
+
+        return requireNotNull(times) { "Period $period not found for ${mode::class.simpleName}" }
     }
 
     suspend fun getPeriodTimeForToday(period: Int, ramadanDetector: RamadanDetector): Pair<String, String> {

@@ -3,7 +3,7 @@ package com.schedly.domain.model
 import java.util.UUID
 
 data class DayPeriod(val day: DayOfWeek, val period: Int)
-data class SessionRef(val courseId: UUID, val sessionId: UUID)
+data class SessionRef(val courseId: UUID, val type: SessionType, val group: String)
 data class InstructorPref(val courseId: UUID, val type: SessionType, val instructor: String)
 data class GroupPref(val courseId: UUID, val type: SessionType, val group: String)
 

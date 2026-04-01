@@ -296,10 +296,9 @@ class ConstraintsTest {
     @Test
     fun `validate accepts constraints with excludedSessions set`() {
         val courseId = UUID.randomUUID()
-        val sessionId = UUID.randomUUID()
         val constraints = Constraints(
             excludedSessions = listOf(
-                SessionRef(courseId, sessionId)
+                SessionRef(courseId, SessionType.LECTURE, "G1")
             )
         )
 
@@ -311,7 +310,6 @@ class ConstraintsTest {
     @Test
     fun `validate accepts all constraint types combined`() {
         val courseId = UUID.randomUUID()
-        val sessionId = UUID.randomUUID()
 
         val constraints = Constraints(
             weekLoadMin = 3,
@@ -323,7 +321,7 @@ class ConstraintsTest {
                 DayPeriod(DayOfWeek.THURSDAY, 6)
             ),
             excludedSessions = listOf(
-                SessionRef(courseId, sessionId)
+                SessionRef(courseId, SessionType.LECTURE, "G1")
             ),
             allowGaps = false,
             matchGroups = true,
@@ -371,11 +369,10 @@ class ConstraintsTest {
 
     @Test
     fun `SessionRef equals and hashCode work correctly`() {
-        val id1 = UUID.randomUUID()
-        val id2 = UUID.randomUUID()
-        val sr1 = SessionRef(id1, id2)
-        val sr2 = SessionRef(id1, id2)
-        val sr3 = SessionRef(id2, id1)
+        val courseId = UUID.randomUUID()
+        val sr1 = SessionRef(courseId, SessionType.LECTURE, "G1")
+        val sr2 = SessionRef(courseId, SessionType.LECTURE, "G1")
+        val sr3 = SessionRef(courseId, SessionType.SECTION, "G1")
 
         assertEquals(sr1, sr2)
         assertEquals(sr1.hashCode(), sr2.hashCode())

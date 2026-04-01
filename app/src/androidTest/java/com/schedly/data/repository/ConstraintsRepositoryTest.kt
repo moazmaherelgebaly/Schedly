@@ -116,7 +116,7 @@ class ConstraintsRepositoryTest {
                 DayPeriod(DayOfWeek.THURSDAY, 6)
             ),
             excludedSessions = listOf(
-                SessionRef(courseId, sessionId)
+                SessionRef(courseId, SessionType.LECTURE, "G1")
             ),
             allowGaps = true,
             matchGroups = false,
